@@ -1,0 +1,45 @@
+---
+title: "User_Combination"
+author: "Yubi Mamiya"
+date: "2024-01-02"
+output: html_document
+---
+
+```{r}
+# libraries
+library(tidyverse)
+library(readr)
+library(readxl)
+library(dplyr)
+library(stringr)
+
+# import all necessary data frames
+# EDIT: ENTER FILE NAMES
+
+one_df <- read.csv('/Users/yubimamiya/Desktop/REPEAT_Lab/NF222_Files/Visit2/222Visit2Combination.csv')
+two_df <- read.csv('/Users/yubimamiya/Desktop/REPEAT_Lab/NF222_Files/Visit3/222Visit3Combination.csv')
+
+# assign variables for the number of trials in each dataframe
+one_rows <- nrow(one_df)
+two_rows <- nrow(two_df)
+
+# merge all dataframes
+merged_df <- rbind(one_df, two_df)
+
+# add column for visit
+
+# EDIT: ENTER CORRECT VISIT NUMBER
+visit_col <-rep(2, one_rows)
+visit_col <- append(visit_col, rep(3, two_rows))
+
+merged_df$Visit <- visit_col
+
+# EDIT: ENTER EXPERIMENT TYPE
+experiment_col <- rep('Sham', one_rows)
+experiment_col <- append(experiment_col, rep('Sham', two_rows))
+
+merged_df$Experiment <- experiment_col
+
+# EDIT FILE NAME
+write.csv(merged_df, "/Users/yubimamiya/Desktop/REPEAT_Lab/NF222_Files/222Combination.csv", row.names=FALSE)
+```
