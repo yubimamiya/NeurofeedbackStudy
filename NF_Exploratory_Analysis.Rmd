@@ -1,0 +1,321 @@
+---
+title: "NF_Exploratory_Analysis"
+author: "Yubi Mamiya"
+date: "2024-02-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+install.packages('dplyr')
+```
+
+
+```{r}
+# libraries
+library(tidyverse)
+library(readr)
+library(readxl)
+library(car)
+library(dplyr)
+```
+
+```{r}
+# change file path when moving to my computer
+combination_df <- read.csv('/Users/yubimamiya/Desktop/REPEATLab/CompleteCombination.csv')
+```
+
+```{r}
+head(combination_df)
+```
+
+
+```{r}
+# separate into NF and Sham
+mean_rating_group <- combination_df %>%
+  group_by(Experiment) %>%
+  # compare average ratings between groups
+  summarise(ratings_mean = mean(Rating, na.rm=TRUE))
+```
+
+```{r}
+print(mean_rating_group)
+# not a significant difference between average ratings btwn NF and Sham grops
+```
+
+```{r}
+# create separate dataframes between NF and Sham
+NF_df <- combination_df %>%
+  filter(Experiment == 'NF')
+
+Sham_df <- combination_df %>%
+  filter(Experiment == 'Sham')
+```
+
+```{r}
+head(NF_df)
+```
+
+```{r}
+head(Sham_df)
+```
+
+```{r}
+# look at progression from visit to visit
+
+progression_NF_visit <- NF_df %>%
+  # visit is either 2 or 3
+  group_by(Visit) %>%
+  # compare average ratings between groups
+  summarise(ratings_mean = mean(Rating, na.rm=TRUE))
+```
+
+```{r}
+# a small improvement in ratings
+print(progression_NF_visit)
+```
+
+```{r}
+# check if there is also an improvement in Sham group
+progression_Sham_visit <- Sham_df %>%
+  # visit is either 2 or 3
+  group_by(Visit) %>%
+  # compare average ratings between groups
+  summarise(ratings_mean = mean(Rating, na.rm=TRUE))
+```
+
+```{r}
+# there is actually a decrease in performance in Sham group
+print(progression_Sham_visit)
+```
+
+```{r}
+# create numeric vectors of values for visits of NF group
+visit2_NF_df <- NF_df %>%
+  filter(Visit == 2)
+
+visit2_NF_vector <- visit2_NF_df$Rating
+
+visit3_NF_df <- NF_df %>%
+  filter(Visit == 3)
+
+visit3_NF_vector <- visit3_NF_df$Rating
+```
+
+```{r}
+# compare Visit 2 and 3 of NF group using t test
+t.test(visit2_NF_vector, visit3_NF_vector, alternative = "two.sided", var.equal = FALSE)
+# the p-value > 0.05 so the difference isn't significant
+```
+
+```{r}
+# compare between runs 1 and 4
+visit2_run1_NF_df <- visit2_NF_df %>%
+  filter(Run == 1)
+
+visit2_run1_NF_vector <- visit2_run1_NF_df$Rating
+
+visit2_run4_NF_df <- visit2_NF_df %>%
+  filter(Run == 4)
+
+visit2_run4_NF_vector <- visit2_run4_NF_df$Rating
+```
+
+```{r}
+# compare Runs 1 and 4 of Visit 2 of NF group using t test
+t.test(visit2_run1_NF_vector, visit2_run4_NF_vector, alternative = "two.sided", var.equal = FALSE)
+# no improvement in performance
+# not significant p-value
+```
+
+```{r}
+# is there a way to group progression by users?
+user_NF_df <- NF_df %>%
+  group_by(User, Visit) %>%
+  summarise(ratings_mean = mean(Rating, na.rm=TRUE))
+```
+
+```{r}
+print(user_NF_df)
+# ratings consistently get lower on the 3rd visit compared to the 2nd
+```
+
+```{r}
+# check sham group to validate significance
+user_Sham_df <- Sham_df %>%
+  group_by(User, Visit) %>%
+  summarise(ratings_mean = mean(Rating, na.rm=TRUE))
+```
+
+```{r}
+print(user_Sham_df)
+# variable progress, some increase in ratings while others decrease
+```
+
+```{r}
+# values were hand-calculated on https://docs.google.com/document/d/1xHXcrY7_3GIIV0I5f4gdofgbwGly8af3eWwzzSKIfIk/edit?usp=sharing
+NF_user_vector <- c(-0.236111, -0.141301, -0.006594, -0.320262, -0.052748, -0.060563)
+Sham_user_vector <- c(0.069594, 0.111828, 0.124286, 0.064286, -0.227679, 0.133914, -0.11533)
+```
+
+```{r}
+# check for difference between groups
+t.test(NF_user_vector, Sham_user_vector, alternative = "two.sided", var.equal = FALSE)
+# p-value = 0.04965, just barely significant
+```
+
+```{r}
+# compare averages by version
+version_df <- combination_df %>%
+  group_by(Experiment, Version) %>%
+  summarise(ratings_mean = mean(Rating, na.rm=TRUE))
+```
+
+```{r}
+print(version_df)
+# there seems to be a few versions where NF has lower mean ratings than Sham
+# Higher from NF to Sham is in versions 1, 2, 3, 5
+# Lower from NF to Sham is in versions 4, 7, 8
+```
+
+```{r}
+# look at version 1
+NF_version1_df <- NF_df %>%
+  filter(Version == 1)
+
+NF_version1_vector <- NF_version1_df$Rating
+
+Sham_version1_df <- Sham_df %>%
+  filter(Version == 1)
+
+Sham_version1_vector <- Sham_version1_df$Rating
+```
+
+```{r}
+t.test(NF_version1_vector, Sham_version1_vector, alternative = "two.sided", var.equal = FALSE)
+# not significant at all
+```
+
+```{r}
+# look at version 2
+NF_version2_df <- NF_df %>%
+  filter(Version == 2)
+
+NF_version2_vector <- NF_version2_df$Rating
+
+Sham_version2_df <- Sham_df %>%
+  filter(Version == 2)
+
+Sham_version2_vector <- Sham_version2_df$Rating
+
+t.test(NF_version2_vector, Sham_version2_vector, alternative = "two.sided", var.equal = FALSE)
+# still not significant
+```
+
+```{r}
+# look at version 3
+NF_version3_df <- NF_df %>%
+  filter(Version == 3)
+
+NF_version3_vector <- NF_version3_df$Rating
+
+Sham_version3_df <- Sham_df %>%
+  filter(Version == 3)
+
+Sham_version3_vector <- Sham_version3_df$Rating
+
+t.test(NF_version3_vector, Sham_version3_vector, alternative = "two.sided", var.equal = FALSE)
+# semi-significant, p-value = 0.0681 > 0.05
+```
+
+```{r}
+# look at version 5
+NF_version5_df <- NF_df %>%
+  filter(Version == 5)
+
+NF_version5_vector <- NF_version5_df$Rating
+
+Sham_version5_df <- Sham_df %>%
+  filter(Version == 5)
+
+Sham_version5_vector <- Sham_version5_df$Rating
+
+t.test(NF_version5_vector, Sham_version5_vector, alternative = "two.sided", var.equal = FALSE)
+# semi-significant: p-value = 0.0804
+```
+
+```{r}
+# look only at visit 3 because that is where the effect of NF is being demonstrated
+# look at version 1 of visit 3 only
+NF_version5_visit3_df <- NF_df %>%
+  filter(Visit == 3) %>%
+  filter(Version == 5)
+
+NF_version5_visit3_vector <- NF_version5_visit3_df$Rating
+
+Sham_version5_visit3_df <- Sham_df %>%
+  filter(Visit == 3) %>%
+  filter(Version == 5)
+
+Sham_version5_visit3_vector <- Sham_version5_visit3_df$Rating
+
+t.test(NF_version5_visit3_vector, Sham_version5_visit3_vector, alternative = "two.sided", var.equal = FALSE)
+# Visit 3 Version 2 had better results, slightly significant, on the threshold, p-value = 0.005013
+# Visit 3 Version 3 is significant, p-value = 0.03511
+
+```
+
+```{r}
+# only look at Regulative Negative trials
+regulate_NF_df <- NF_df %>%
+  filter(Condition == 'Regulative Negative')
+
+regulate_Sham_df <- Sham_df %>%
+  filter(Condition == 'Regulative Negative')
+```
+
+```{r}
+user_regulate_NF_df <- regulate_NF_df %>%
+  group_by(User, Visit) %>%
+  summarise(ratings_mean = mean(Rating, na.rm=TRUE))
+```
+
+```{r}
+print(user_regulate_NF_df)
+# no pattern in progress
+```
+
+```{r}
+regulate_NF_vector <- regulate_NF_df$Rating
+```
+
+```{r}
+regulate_Sham_vector <- regulate_Sham_df$Rating
+```
+
+```{r}
+t.test(regulate_NF_vector, regulate_Sham_vector, alternative = "two.sided", var.equal = FALSE)
+# no difference between mean ratings of regulate negative of NF and Sham group
+```
+
+```{r}
+# check only visit 3
+visit3_regulate_NF_df <- regulate_NF_df %>%
+  filter(Visit == 3)
+
+visit3_regulate_Sham_df <- regulate_Sham_df %>%
+  filter(Visit == 3)
+
+visit3_regulate_NF_vector <- visit3_regulate_NF_df$Rating
+
+visit3_regulate_Sham_vector <- visit3_regulate_Sham_df$Rating
+```
+
+```{r}
+t.test(visit3_regulate_NF_vector, visit3_regulate_Sham_vector, alternative = "two.sided", var.equal = FALSE)
+# no significant difference
+```
+
